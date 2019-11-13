@@ -13,3 +13,6 @@
 [submodule "modules/oConsole"]
 	path = modules/oConsole
 	url = https://github.com/SkyLined/oConsole/
+[submodule "modules/mRegistry"]
+	path = modules/mRegistry
+	url = https://github.com/SkyLined/mRegistry/
