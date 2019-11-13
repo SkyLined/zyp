@@ -16,3 +16,6 @@
 [submodule "modules/mRegistry"]
 	path = modules/mRegistry
 	url = https://github.com/SkyLined/mRegistry/
+[submodule "modules/mDateTime"]
+	path = modules/mDateTime
+	url = https://github.com/SkyLined/mDateTime/
