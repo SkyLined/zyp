@@ -1,7 +1,9 @@
 {
   "asDependentOnProductNames": [
     "cFileSystemItem", 
+    "mDateTime",
     "mProductDetails", 
+    "mRegistry",
     "mWindowsAPI",
     "mWindowsSDK",
     "oConsole"
