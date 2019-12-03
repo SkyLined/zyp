@@ -8,9 +8,9 @@
 ```
 Usage:
 ======
-+ **zyp.py <source file or folder> <destination .zip file>**
-+ **unzyp.py [--list] <source .zip file> <destination folder>**
-+ **unzyp.py --list <source .zip file>**
++ **zyp.py *\<source file or folder>* *\<destination .zip file>***
++ **unzyp.py *\<source .zip file>* *\<destination folder>***
++ **unzyp.py --list *\<source .zip file>***
 
 zyp.py
 ------
