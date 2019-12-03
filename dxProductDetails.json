@@ -1,14 +1,14 @@
 {
   "asDependentOnProductNames": [
     "cFileSystemItem", 
-    "mDateTime",
+    "mDateTime", 
     "mProductDetails", 
-    "mRegistry",
-    "mWindowsAPI",
-    "mWindowsSDK",
+    "mRegistry", 
+    "mWindowsAPI", 
+    "mWindowsSDK", 
     "oConsole"
   ], 
-  "oProductVersion": "2019-10-17 19:34", 
+  "oProductVersion": "2019-12-03 10:13", 
   "oRepository": {
     "sBranch": "master", 
     "sRepositoryName": "zyp", 
