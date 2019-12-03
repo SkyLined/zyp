@@ -3,7 +3,7 @@ from oConsole import oConsole;
 # Colors used in output for various types of information:
 NORMAL =            0x0F07; # Light gray
 DIM =               0x0F08; # Dark gray
-INFO =              0x0F0A; # Bright green
+INFO =              0x0F0D; # Bright green
 HILITE =            0x0F0F; # Bright white
 ERROR =             0x0F04; # Red
 ERROR_INFO =        0x0F0C; # Bright red

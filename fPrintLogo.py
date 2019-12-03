@@ -3,8 +3,8 @@ from mColors import *;
 
 asLogo = [s.rstrip() for s in """
                                                                                 
-        .dSSSSSSSP' YSb   ,dSP' iSSSSSSb                                        
-            ,dSP'    YSb,dSP'  iSP` _7SP     Python zip compression utility     
+        .dSSSSSSSP' YSb   ,dSP' iSSSSSSb,                                       
+            ,dSP'    YSb,dSP'  iSP` _7SP`   Python zip (de-)compression utility 
           ,dSP'       )dSP'   iSSSSSS*'                                         
         ,dSP'       ,dSP'    iSP`          http://github.com/SkyLined/zyp       
       .dSSSSSSP'  .dSP'     iSP`                                                
@@ -16,11 +16,11 @@ asLogo = [s.rstrip() for s in """
 # digit = color number.
 asLogoColors = [s.rstrip() for s in """
                                                                                 
-        DD5555555DD D5D   DD5DD D555555D                                        
-            DD5DD    D5DDD5DD  D5DD DD5D     777777 777 77777777777 7777777     
-          DD5DD       DD5DD   D555555DD                                         
-        DD5DD       DD5DD    D5DD          555555555555555555555555555555       
-      D5555555DD  DD5DD     D5DD                                                
+        5DDDDDDDDD5 5DD   5DDD5 5DDDDDDD5                                       
+            5DDD5    5DD5DDD5  5DD5 5DDD5   777777 777 7777777777777777 7777777 
+          5DDD5       5DDD5   5DDDDDD55                                         
+        5DDD5       5DDD5    5DD5          777777777777777777777777777777       
+      5DDDDDDDD5  5DDD5     5DD5                                                
                                                                                 """.split("""
 """)];
 

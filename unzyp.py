@@ -146,7 +146,10 @@ if not oInputZipFile.fbClose():
   oConsole.fPrint(ERROR, "Input zip file ", ERROR_INFO, oInputZipFile.sPath, ERROR, " cannot be closed!");
   sys.exit(5);
 
-if bExtractFiles:
-  oConsole.fPrint("Extracted ", INFO, str(uTotalFiles), NORMAL, " files (", INFO, str(uTotalBytes), NORMAL,
-      " bytes) and ", INFO, str(uTotalFolders), NORMAL, " folders to ", INFO, oOutputBaseFolder.sPath, NORMAL, ".");
+if not bExtractFiles:
+  oConsole.fPrint("Found ", INFO, str(uTotalFiles), NORMAL, " files (", INFO, str(uTotalBytes), NORMAL,
+      " bytes) and ", INFO, str(uTotalFolders), NORMAL, " folders.");
+  sys.exit(0);
+oConsole.fPrint("Extracted ", INFO, str(uTotalFiles), NORMAL, " files (", INFO, str(uTotalBytes), NORMAL,
+    " bytes) and ", INFO, str(uTotalFolders), NORMAL, " folders to ", INFO, oOutputBaseFolder.sPath, NORMAL, ".");
 sys.exit(0 if uTotalFiles == 0 else 1);

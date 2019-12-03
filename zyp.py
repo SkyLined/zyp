@@ -36,14 +36,14 @@ for sArgument in sys.argv[1:]:
   if sArgument in ["-?", "-h", "--help", "/?", "/h", "/help"]:
     fPrintLogo();
     fPrintUsageInformation();
-    sys._exit(0);
+    sys.exit(0);
   elif sArgument in ["--version", "/version"]:
     fPrintVersionInformation(
       bCheckForUpdates = True,
       bCheckAndShowLicenses = True,
       bShowInstallationFolders = True,
     );
-    sys._exit(0);
+    sys.exit(0);
   elif sInputFileOrFolderPath is None:
     sInputFileOrFolderPath = sArgument;
   elif sOutputZipFilePath is None:
