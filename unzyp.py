@@ -84,63 +84,85 @@ uTotalBytes = 0;
 # Get all descendants of the input folder, which can be iside a zip file (bParseZipFiles = True)
 # Do not get descendants of descendants if they are zip files (bParseDescendantZipFiles = False) as we will
 # simply copy them as is without parsing them.
-aoQueuedInputFilesAndFolders = oInputZipFile.faoGetChildren(bParseZipFiles = True);
-while len(aoQueuedInputFilesAndFolders) > 0:
-  oInputFileOrFolder = aoQueuedInputFilesAndFolders.pop(0);
+oConsole.fStatus("* Reading root folder...");
+aoQueuedInputFilesAndFoldersToBeEnumerated = oInputZipFile.faoGetChildren(bParseZipFiles = True);
+aoInputFolders = [];
+aoInputFiles = [];
+while len(aoQueuedInputFilesAndFoldersToBeEnumerated) > 0:
+  oInputFileOrFolder = aoQueuedInputFilesAndFoldersToBeEnumerated.pop(0);
   sRelativePath = oInputZipFile.fsGetRelativePathTo(oInputFileOrFolder);
   bIsFolder = oInputFileOrFolder.fbIsFolder(bParseZipFiles = True);
   if bIsFolder:
-    uTotalFolders += 1;
+    aoInputFolders.append(oInputFileOrFolder);
     # Queue children of the folder at the top, so we walk it like a tree, branch by branch.
-    oConsole.fStatus("* Reading folder ", INFO, sRelativePath, NORMAL, "...");
-    aoQueuedInputFilesAndFolders = oInputFileOrFolder.faoGetChildren(bParseZipFiles = True) + aoQueuedInputFilesAndFolders;
+    oConsole.fStatus(
+      "* Found ", INFO, str(len(aoInputFiles)), NORMAL, " files and ",
+      INFO, str(len(aoInputFolders)), NORMAL, " folders. ",
+      "Currently reading folder ", INFO, sRelativePath, NORMAL, "...");
+    aoQueuedInputFilesAndFoldersToBeEnumerated = oInputFileOrFolder.faoGetChildren(bParseZipFiles = True) \
+        + aoQueuedInputFilesAndFoldersToBeEnumerated;
   else:
-    oConsole.fStatus("* Reading file ", INFO, sRelativePath, NORMAL, "...");
-    sData = oInputFileOrFolder.fsRead(bParseZipFiles = True);
-    uTotalFiles += 1;
-    uTotalBytes += len(sData);
-  if bExtractFiles:
-    oOutputFileOrFolder = oOutputBaseFolder.foGetDescendant(sRelativePath, bParseZipFiles = True);
-    if oInputFileOrFolder.fbIsFolder(bParseZipFiles = True):
-      # Handle folders:
-      if oOutputFileOrFolder.fbExists(bParseZipFiles = True):
-        if not oOutputFileOrFolder.fbIsFolder(bParseZipFiles = True):
-          # File exists: error
-          oConsole.fPrint(ERROR, "Cannot create folder ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
-              oOutputBaseFolder.sPath, ERROR, ": a file with that name already exists!");
-          sys.exit(3);
-        # Folders exists: do nothing
-      else:
-        # Folders does not exist: create
-        oConsole.fStatus("* Creating folder ", INFO, sRelativePath, NORMAL, "...");
-        if not oOutputFileOrFolder.fbCreateAsFolder(bParseZipFiles = True):
-          oConsole.fPrint(ERROR, "Cannot create folder ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
-              oOutputBaseFolder.sPath, ERROR, ": a folder with that name already exists!");
-          sys.exit(3);
+    aoInputFiles.append(oInputFileOrFolder);
+if bExtractFiles:
+  for uIndex in xrange(len(aoInputFolders)):
+    sProgress = "%5f" % (100.0 * uIndex / len(aoInputFolders));
+    oInputFolder = aoInputFolders[uIndex];
+    sRelativePath = oInputZipFile.fsGetRelativePathTo(oInputFolder);
+    oOutputFolder = oOutputBaseFolder.foGetDescendant(sRelativePath, bParseZipFiles = True);
+    oConsole.fStatus("* Creating folders (", INFO, sProgress, NORMAL, "): ", INFO, sRelativePath, NORMAL, "...");
+    if oOutputFolder.fbExists(bParseZipFiles = True):
+      if not oOutputFolder.fbIsFolder(bParseZipFiles = True):
+        # File exists: error
+        oConsole.fPrint(ERROR, "Cannot create folder ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
+            oOutputBaseFolder.sPath, ERROR, ": a file with that name already exists!");
+        sys.exit(3);
+      # Folders exists: do nothing
     else:
-      # Handle files:
-      if oOutputFileOrFolder.fbExists(bParseZipFiles = True):
-        if not oOutputFileOrFolder.fbIsFile(bParseZipFiles = True):
-          # Folders exists: error
-          oConsole.fPrint(ERROR, "Cannot create file ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
-              oOutputBaseFolder.sPath, ERROR, ": a folder with that name already exists!");
-          sys.exit(3);
-        # File exists: overwrite
-        oConsole.fStatus("* Overwriting file ", INFO, sRelativePath, NORMAL, " (", INFO, str(len(sData)), NORMAL, " bytes)...");
-        if not oOutputFileOrFolder.fbWrite(sData):
-          oConsole.fPrint(ERROR, "Cannot write ", ERROR_INFO, str(len(sData)), ERROR, " bytes over existing file ", ERROR_INFO,
-              sRelativePath, ERROR, " in folder ", ERROR_INFO, oOutputBaseFolder.sPath, ERROR, "!");
-          sys.exit(3);
-      else:
-        # File does not exists: create
-        oConsole.fStatus("* Creating file ", INFO, sRelativePath, NORMAL, " (", INFO, str(len(sData)), NORMAL, " bytes)...");
-        if not oOutputFileOrFolder.fbCreateAsFile(sData, bParseZipFiles = True):
-          oConsole.fPrint(ERROR, "Cannot write ", ERROR_INFO, str(len(sData)), ERROR, " bytes to new file ", ERROR_INFO,
-              sRelativePath, ERROR, " in folder ", ERROR_INFO, oOutputBaseFolder.sPath, ERROR, "!");
-          sys.exit(3);
-  elif not bIsFolder:
+      # Folders does not exist: create
+      if not oOutputFolder.fbCreateAsFolder(bParseZipFiles = True):
+        oConsole.fPrint(ERROR, "Cannot create folder ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
+            oOutputBaseFolder.sPath, ERROR, ": a folder with that name already exists!");
+        sys.exit(3);
+  
+  for uIndex in xrange(len(aoInputFiles)):
+    sProgress = "%5f" % (100.0 * uIndex / len(aoInputFiles));
+    oInputFile = aoInputFiles[uIndex];
+    sRelativePath = oInputZipFile.fsGetRelativePathTo(oInputFile);
+    oConsole.fStatus("* Creating files (", INFO, sProgress, NORMAL, "): reading ", INFO, sRelativePath, NORMAL, "...");
+    sData = oInputFileOrFolder.fsRead(bParseZipFiles = True);
+    uTotalBytes += len(sData);
+    oOutputFile = oOutputBaseFolder.foGetDescendant(sRelativePath, bParseZipFiles = True);
+    if oOutputFile.fbExists(bParseZipFiles = True):
+      if not oOutputFile.fbIsFile(bParseZipFiles = True):
+        # Folders exists: error
+        oConsole.fPrint(ERROR, "Cannot create file ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
+            oOutputBaseFolder.sPath, ERROR, ": a folder with that name already exists!");
+        sys.exit(3);
+      # File exists: overwrite
+      oConsole.fStatus("* Creating files (", INFO, sProgress, NORMAL, "): overwriting ", INFO, sRelativePath, NORMAL, \
+          " (", INFO, str(len(sData)), NORMAL, " bytes)...");
+      if not oOutputFile.fbWrite(sData):
+        oConsole.fPrint(ERROR, "Cannot write ", ERROR_INFO, str(len(sData)), ERROR, " bytes over existing file ", ERROR_INFO,
+            sRelativePath, ERROR, " in folder ", ERROR_INFO, oOutputBaseFolder.sPath, ERROR, "!");
+        sys.exit(3);
+    else:
+      # File does not exists: create
+      oConsole.fStatus("* Creating files (", INFO, sProgress, NORMAL, "): creating ", INFO, sRelativePath, NORMAL, \
+          " (", INFO, str(len(sData)), NORMAL, " bytes)...");
+      if not oOutputFile.fbCreateAsFile(sData, bParseZipFiles = True):
+        oConsole.fPrint(ERROR, "Cannot write ", ERROR_INFO, str(len(sData)), ERROR, " bytes to new file ", ERROR_INFO,
+            sRelativePath, ERROR, " in folder ", ERROR_INFO, oOutputBaseFolder.sPath, ERROR, "!");
+        sys.exit(3);
+else:
+  for uIndex in xrange(len(aoInputFiles)):
+    sProgress = "%5f" % (100.0 * uIndex / len(aoInputFiles));
+    oInputFile = aoInputFiles[uIndex];
     # We're not extracting, simply listing the files:
-    oConsole.fOutput("+ File ", INFO, sRelativePath, NORMAL, " (", INFO, str(len(sData)), NORMAL, " bytes)...");
+    sRelativePath = oInputZipFile.fsGetRelativePathTo(oInputFile);
+    oConsole.fStatus("* Reading files (", INFO, sProgress, NORMAL, "): reading ", INFO, sRelativePath, NORMAL, "...");
+    sData = oInputFileOrFolder.fsRead(bParseZipFiles = True);
+    uTotalBytes += len(sData);
+    oConsole.fOutput("+ ", INFO, sRelativePath, NORMAL, " (", INFO, str(len(sData)), NORMAL, " bytes)...");
 
 if not oInputZipFile.fbClose():
   oConsole.fPrint(ERROR, "Input zip file ", ERROR_INFO, oInputZipFile.sPath, ERROR, " cannot be closed!");
