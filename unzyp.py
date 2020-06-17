@@ -37,14 +37,14 @@ for sArgument in sys.argv[1:]:
   if sArgument in ["-?", "-h", "--help", "/?", "/h", "/help"]:
     fPrintLogo();
     fPrintUsageInformation();
-    sys._exit(0);
+    sys.exit(0);
   elif sArgument in ["--version", "/version"]:
     fPrintVersionInformation(
       bCheckForUpdates = True,
       bCheckAndShowLicenses = True,
       bShowInstallationFolders = True,
     );
-    sys._exit(0);
+    sys.exit(0);
   elif sArgument in ["--list", "/list"]:
     bExtractFiles = False;
   elif sInputZipFilePath is None:
@@ -78,8 +78,6 @@ if bExtractFiles:
   elif not oOutputBaseFolder.fbCreateAsFolder(bParseZipFiles = True):
     oConsole.fPrint(ERROR, "Output folder ", ERROR_INFO, oOutputBaseFolder.sPath, ERROR, " cannot be created!");
     sys.exit(3);
-uTotalFolders = 0;
-uTotalFiles = 0;
 uTotalBytes = 0;
 # Get all descendants of the input folder, which can be iside a zip file (bParseZipFiles = True)
 # Do not get descendants of descendants if they are zip files (bParseDescendantZipFiles = False) as we will
@@ -163,6 +161,9 @@ else:
     sData = oInputFileOrFolder.fsRead(bParseZipFiles = True);
     uTotalBytes += len(sData);
     oConsole.fOutput("+ ", INFO, sRelativePath, NORMAL, " (", INFO, str(len(sData)), NORMAL, " bytes)...");
+
+uTotalFolders = len(aoInputFolders);
+uTotalFiles = len(aoInputFiles);
 
 if not oInputZipFile.fbClose():
   oConsole.fPrint(ERROR, "Input zip file ", ERROR_INFO, oInputZipFile.sPath, ERROR, " cannot be closed!");
