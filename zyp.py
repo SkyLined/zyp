@@ -61,10 +61,17 @@ if sOutputZipFilePath is None:
 oInputFileOrFolder = cFileSystemItem(sInputFileOrFolderPath);
 if oInputFileOrFolder.fbIsFile(bParseZipFiles = True):
   oBaseFolder = oInputFileOrFolder.oParent;
-  aoInputFilesAndFolders = [oInputFileOrFolder];
+  aoInputFiles = [oInputFileOrFolder];
 elif oInputFileOrFolder.fbIsFolder(bParseZipFiles = True):
   oBaseFolder = oInputFileOrFolder;
-  aoInputFilesAndFolders = oInputFileOrFolder.faoGetDescendants();
+  aoInputFiles = [
+    oInputFileOrFolder
+    for oInputFileOrFolder in oBaseFolder.faoGetDescendants()
+    if (
+      oInputFileOrFolder.sPath != oOutputZipFile.sPath
+      and oInputFileOrFolder.fbIsFile(bParseZipFiles = True)
+    )
+  ];
 else:
   oConsole.fPrint(ERROR, "Input file or folder ", ERROR_INFO, oInputFileOrFolder.sPath, ERROR, " not found!");
   sys.exit(4);
@@ -77,38 +84,35 @@ if oOutputZipFile.fbExists(bParseZipFiles = True) \
 if not oOutputZipFile.fbCreateAsZipFile(bParseZipFiles = True, bKeepOpen = True):
   oConsole.fPrint(ERROR, "Output zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, " cannot be created!");
   sys.exit(5);
-uTotalBytes = 0;
-uTotalFiles = 0;
-for oInputFileOrFolder in aoInputFilesAndFolders:
-  if oInputFileOrFolder.sPath != oOutputZipFile.sPath \
-      and oInputFileOrFolder.fbIsFile(bParseZipFiles = True):
-    sRelativePath = oBaseFolder.fsGetRelativePathTo(oInputFileOrFolder);
-    oOutputFile = oOutputZipFile.foGetDescendant(sRelativePath, bParseZipFiles = True);
-    oConsole.fStatus("* Reading ", INFO, sRelativePath, NORMAL, "...");
-    sData = oInputFileOrFolder.fsRead();
-    if oOutputFile.fbIsFile(bParseZipFiles = True):
-      oConsole.fStatus("* Overwriting file ", INFO, sRelativePath, NORMAL,
-          " (", INFO, str(len(sData)), NORMAL, " bytes)...");
-      if not oOutputFile.fbWrite(sData):
-        oConsole.fPrint(ERROR, "Cannot write ", ERROR_INFO, str(len(sData)), ERROR,
-            " bytes over existing file ", ERROR_INFO, sRelativePath, ERROR,
-            " in zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, "!");
-        sys.exit(5);
-    else:
-      oConsole.fStatus("* Creating file ", INFO, sRelativePath, NORMAL,
-          " (", INFO, str(len(sData)), NORMAL, " bytes)...");
-      if not oOutputFile.fbCreateAsFile(sData, bParseZipFiles = True):
-        oConsole.fPrint(ERROR, "Cannot write ", ERROR_INFO, str(len(sData)), ERROR,
-            " bytes to new file ", ERROR_INFO, sRelativePath, ERROR,
-            " in zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, "!");
-        sys.exit(5);
-    uTotalBytes += len(sData);
-    uTotalFiles += 1;
+uProcessedBytes = 0;
+uProcessedFiles = 0;
+for oInputFile in aoInputFiles:
+  sRelativePath = oBaseFolder.fsGetRelativePathTo(oInputFile);
+  oOutputFile = oOutputZipFile.foGetDescendant(sRelativePath, bParseZipFiles = True);
+  nProgress = 1.0 * uProcessedFiles / len(aoInputFiles);
+  oConsole.fProgressBar(nProgress, "* %s: Reading..." % sRelativePath);
+  sData = oInputFile.fsRead();
+  if oOutputFile.fbIsFile(bParseZipFiles = True):
+    oConsole.fProgressBar(nProgress, "* %s: Overwriting (%d bytes)..." % (sRelativePath, len(sData)));
+    if not oOutputFile.fbWrite(sData):
+      oConsole.fPrint(ERROR, "Cannot write ", ERROR_INFO, str(len(sData)), ERROR,
+          " bytes over existing file ", ERROR_INFO, sRelativePath, ERROR,
+          " in zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, "!");
+      sys.exit(5);
+  else:
+    oConsole.fProgressBar(nProgress, "* %s: Creating (%d bytes)..." % (sRelativePath, len(sData)));
+    if not oOutputFile.fbCreateAsFile(sData, bParseZipFiles = True):
+      oConsole.fPrint(ERROR, "Cannot write ", ERROR_INFO, str(len(sData)), ERROR,
+          " bytes to new file ", ERROR_INFO, sRelativePath, ERROR,
+          " in zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, "!");
+      sys.exit(5);
+  uProcessedBytes += len(sData);
+  uProcessedFiles += 1;
 
 if not oOutputZipFile.fbClose():
   oConsole.fPrint(ERROR, "Output zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, " cannot be closed!");
   sys.exit(5);
 
-oConsole.fPrint("Added ", INFO, str(uTotalFiles), NORMAL, " files (", INFO, str(uTotalBytes), NORMAL,
+oConsole.fPrint("Added ", INFO, str(uProcessedFiles), NORMAL, " files (", INFO, str(uProcessedBytes), NORMAL,
     " bytes) to ", INFO, oOutputZipFile.sPath, NORMAL, ".");
-sys.exit(0 if uTotalFiles == 0 else 1);
+sys.exit(0 if uProcessedFiles == 0 else 1);
