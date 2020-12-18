@@ -5,9 +5,8 @@ def fPrintUsageInformation():
   oConsole.fLock();
   try:
     oConsole.fPrint(HILITE,"Usage:");
-    oConsole.fPrint(INFO, "  zyp.py <source file or folder> <destination .zip file>");
-    oConsole.fPrint(INFO, "  unzyp.py [--list] <source .zip file> <destination folder>");
-    oConsole.fPrint(INFO, "  unzyp.py --list <source .zip file>");
+    oConsole.fPrint(INFO, "  zyp.py [options] <source file or folder> <destination .zip file>");
+    oConsole.fPrint(INFO, "  unzyp.py [options] <source .zip file> [<destination folder>]");
     oConsole.fPrint();
     oConsole.fPrint(INFO, "  zyp.py", NORMAL, " will add the source files or all files in the source folder to the");
     oConsole.fPrint("  destination .zip file. The destination .zip file is created if it does not");
@@ -18,8 +17,16 @@ def fPrintUsageInformation():
     oConsole.fPrint("  folder. The destination folder is created if it does not exist and files");
     oConsole.fPrint("  are added to any existing destination folder. If a file already exists in");
     oConsole.fPrint("  the destination folder, it is overwritten.");
-    oConsole.fPrint("  If you specify the ", INFO, "--list", NORMAL, " argument, no files will be extracted but");
-    oConsole.fPrint("  all the files found in the source .zip file are output.");
+    oConsole.fPrint();
+    oConsole.fPrint(INFO, "Options:");
+    oConsole.fPrint(INFO, "  -h", NORMAL, ", ", INFO, "--help", NORMAL);
+    oConsole.fPrint("    Output this cruft without zipping/unzipping anything.");
+    oConsole.fPrint(INFO, "  --version", NORMAL);
+    oConsole.fPrint("    Output version information without zipping/unzipping anything.");
+    oConsole.fPrint(INFO, "  -d", NORMAL, ", ", INFO, "--debug", NORMAL);
+    oConsole.fPrint("    Output debug information while zipping/unzipping files.");
+    oConsole.fPrint(INFO, "  -l", NORMAL, ", ", INFO, "--list", NORMAL);
+    oConsole.fPrint("    (unzyp only) List all files in a zip file without extracting them.");
     oConsole.fPrint();
     oConsole.fPrint(HILITE, "Exit codes:");
     oConsole.fPrint("  ", 0x0F0A, "0", NORMAL," = zyp/unzyp did not compress/decompress any files.");
