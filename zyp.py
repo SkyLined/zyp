@@ -18,12 +18,12 @@ import re, sys;
 # 4 = cannot read from uncompressed file or folder.
 # 5 = cannot write to compressed zip file.
 
-from fCheckDependencies import fCheckDependencies;
-fCheckDependencies();
 try:
   import mDebugOutput;
 except:
   mDebugOutput = None;
+from fInitializeProduct import fInitializeProduct;
+fInitializeProduct();
 
 from cFileSystemItem import cFileSystemItem;
 from fPrintLogo import fPrintLogo;
