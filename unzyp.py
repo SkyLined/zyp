@@ -18,20 +18,18 @@ import sys;
 # 4 = cannot read from compressed zip file
 # 5 = cannot write to decompressed file or create folder.
 
-try:
-  import mDebugOutput;
-except:
-  mDebugOutput = None;
 from fInitializeProduct import fInitializeProduct;
 fInitializeProduct();
 
-from cFileSystemItem import cFileSystemItem;
-from fPrintLogo import fPrintLogo;
-from fPrintUsageInformation import fPrintUsageInformation;
-from fPrintVersionInformation import fPrintVersionInformation;
-from fsBytesToHumanReadableString import fsBytesToHumanReadableString;
-from mColors import *;
-from oConsole import oConsole;
+try: # mDebugOutput use is Optional
+  from mDebugOutput import *;
+except: # Do nothing if not available.
+  ShowDebugOutput = lambda fxFunction: fxFunction;
+  fShowDebugOutput = lambda sMessage: None;
+  fEnableDebugOutputForModule = lambda mModule: None;
+  fEnableDebugOutputForClass = lambda cClass: None;
+  fEnableAllDebugOutput = lambda: None;
+  cCallStack = fTerminateWithException = fTerminateWithConsoleOutput = None;
 
 def fMain():
   # Parse arguments
