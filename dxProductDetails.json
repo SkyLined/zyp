@@ -1,4 +1,9 @@
 {
+  "asProductTypes": ["Python application"],
+  "asPythonApplicationNames": [
+    "zyp",
+    "unzyp"
+  ],
   "asDependentOnProductNames": [
     "cFileSystemItem", 
     "fsBytesToHumanReadableString",
