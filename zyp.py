@@ -77,6 +77,7 @@ try:
     
     asInputFilesAndFoldersPathsAndPatterns = asFilesAndFoldersPathsAndPatterns[:-1];
     sOutputZipFilePath = asFilesAndFoldersPathsAndPatterns[-1];
+    oOutputZipFile = cFileSystemItem(sOutputZipFilePath);
     
     doInputFile_by_sRelativePathInOutputZip = {};
     for sInputFilesAndFoldersPathOrPattern in asInputFilesAndFoldersPathsAndPatterns:
@@ -152,7 +153,6 @@ try:
               "+ File ", INFO, oBaseFolder.fsGetRelativePathTo(oInputFile), NORMAL, " (", INFO, fsBytesToHumanReadableString(oInputFile.fuGetSize()), NORMAL, ")."
             );
           doInputFile_by_sRelativePathInOutputZip[sRelativePath] = oInputFile;
-    oOutputZipFile = cFileSystemItem(sOutputZipFilePath);
     if oOutputZipFile.fbExists(bParseZipFiles = True):
       if not oOutputZipFile.fbDelete(bParseZipFiles = True):
         oConsole.fPrint(ERROR, "Existing output zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, " cannot be deleted!");
