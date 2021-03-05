@@ -33,7 +33,7 @@ except: # Do nothing if not available.
 
 try:
   from cFileSystemItem import cFileSystemItem;
-  from fsBytesToHumanReadableString import fsBytesToHumanReadableString;
+  from mHumanReadable import fsBytesToHumanReadableString;
   from oConsole import oConsole;
   
   from fPrintLogo import fPrintLogo;
