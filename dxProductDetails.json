@@ -1,34 +1,35 @@
 {
-  "asDependentOnProductNames": [
-    "cFileSystemItem", 
-    "mHumanReadable", 
-    "mDateTime", 
-    "mProductDetails", 
-    "mRegistry", 
-    "mWindowsAPI", 
-    "mWindowsSDK", 
-    "oConsole"
-  ], 
-  "asJavaScriptModuleNames": [], 
-  "asOptionalProductNames": [
+  "a0sDebugAdditionalProductNames": [
     "mDebugOutput"
-  ], 
-  "asPHPModuleNames": [], 
+  ],
+  "a0sDependentOnProductNames": [
+    "mFileSystemItem",
+    "mHumanReadable",
+    "mDateTime",
+    "mNotProvided",
+    "mProductDetails",
+    "mRegistry",
+    "mWindowsAPI",
+    "mWindowsSDK",
+    "mConsole"
+  ],
+  "a0sPythonApplicationNames": [
+    "zyp",
+    "unzyp"
+  ],
   "asProductTypes": [
     "Python application"
-  ], 
-  "asPythonApplicationNames": [
-    "zyp", 
-    "unzyp"
-  ], 
-  "oProductVersion": "2021-04-15 11:37", 
-  "oRepository": {
-    "sBranch": "master", 
-    "sRepositoryName": "zyp", 
-    "sType": "GitHub", 
-    "sUserName": "SkyLined"
-  }, 
-  "sProductAuthor": "SkyLined", 
-  "sProductName": "zyp", 
-  "sProductURL": "https://github.com/SkyLined/zyp"
+  ],
+  "o0Repository": {
+    "sStructureVersion": "2021-07-02 11:16",
+    "sType": "GitHub",
+    "sbBranch": "master",
+    "sbRepositoryName": "zyp",
+    "sbUserName": "SkyLined"
+  },
+  "oProductVersion": "2021-07-07 12:51",
+  "sProductAuthor": "SkyLined",
+  "sProductName": "zyp",
+  "sStructureVersion": "2021-07-02 11:16",
+  "sb0ProductURL": "https://github.com/SkyLined/zyp"
 }

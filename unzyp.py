@@ -22,23 +22,18 @@ from fInitializeProduct import fInitializeProduct;
 fInitializeProduct();
 
 try: # mDebugOutput use is Optional
-  from mDebugOutput import *;
-except: # Do nothing if not available.
-  ShowDebugOutput = lambda fxFunction: fxFunction;
-  fShowDebugOutput = lambda sMessage: None;
-  fEnableDebugOutputForModule = lambda mModule: None;
-  fEnableDebugOutputForClass = lambda cClass: None;
-  fEnableAllDebugOutput = lambda: None;
-  cCallStack = fTerminateWithException = fTerminateWithConsoleOutput = None;
+  import mDebugOutput as m0DebugOutput;
+except ModuleNotFoundError as oException:
+  if oException.args[0] != "No module named 'mDebugOutput'":
+    raise;
+  m0DebugOutput = None;
 
 try:
-  from cFileSystemItem import cFileSystemItem;
+  from mFileSystemItem import cFileSystemItem;
   from mHumanReadable import fsBytesToHumanReadableString;
-  from oConsole import oConsole;
+  from mConsole import oConsole;
   
-  from fPrintLogo import fPrintLogo;
-  from fPrintUsageInformation import fPrintUsageInformation;
-  from fPrintVersionInformation import fPrintVersionInformation;
+  from fatsArgumentLowerNameAndValue import fatsArgumentLowerNameAndValue;
   from mColors import *;
   
   if __name__ == "__main__":
@@ -46,56 +41,46 @@ try:
     sInputZipFilePath = None;
     sOutputFolderPath = None;
     bExtractFiles = True;
-    for sArgument in sys.argv[1:]:
-      sLowerArgument = sArgument.lower();
-      if sLowerArgument in ["-?", "-h", "--help", "/?", "/h", "/help"]:
-        fPrintLogo();
-        fPrintUsageInformation();
-        sys.exit(0);
-      elif sLowerArgument in ["--version", "/version"]:
-        fPrintVersionInformation(
-          bCheckForUpdates = True,
-          bCheckAndShowLicenses = True,
-          bShowInstallationFolders = True,
-        );
-        sys.exit(0);
-      elif sLowerArgument in ["-", "/l", "--list", "/list"]:
+    for (sArgument, s0LowerName, s0Value) in fatsArgumentLowerNameAndValue():
+      if s0LowerName in ["l", "list"]:
         bExtractFiles = False;
-      elif sLowerArgument in ["-d", "/d", "--debug", "/debug"]:
-        if mDebugOutput is None:
-          oConsole.fPrint(ERROR, "The mDebugOutput module is not available!");
+      elif s0LowerName in ["debug"]:
+        if m0DebugOutput is None:
+          oConsole.fOutput(ERROR, "The mDebugOutput module is not available!");
           sys.exit(2);
-        mDebugOutput.fEnableAllDebugOutput();
+        m0DebugOutput.fEnableAllDebugOutput();
+      elif s0LowerName:
+        oConsole.fOutput(ERROR, "- Unknown argument ", ERROR_INFO, sArgument, ERROR, "!");
       elif sInputZipFilePath is None:
         sInputZipFilePath = sArgument;
       elif sOutputFolderPath is None:
         sOutputFolderPath = sArgument;
       else:
-        oConsole.fPrint(ERROR, "Superfluous argument ", ERROR_INFO, sArgument, ERROR, "!");
+        oConsole.fOutput(ERROR, "- Superfluous argument ", ERROR_INFO, sArgument, ERROR, "!");
         sys.exit(2);
     if sInputZipFilePath is None:
-      oConsole.fPrint(ERROR, "Missing input zip file argument!");
+      oConsole.fOutput(ERROR, "Missing input zip file argument!");
       sys.exit(2);
     if bExtractFiles and sOutputFolderPath is None:
-      oConsole.fPrint(ERROR, "Missing output folder argument!");
+      oConsole.fOutput(ERROR, "Missing output folder argument!");
       sys.exit(2);
     
     oInputZipFile = cFileSystemItem(sInputZipFilePath);
     if not oInputZipFile.fbIsFile(bParseZipFiles = True):
-      oConsole.fPrint(ERROR, "Cannot find input zip file ", ERROR_INFO, oInputZipFile.sPath, ERROR, "!");
+      oConsole.fOutput(ERROR, "Cannot find input zip file ", ERROR_INFO, oInputZipFile.sPath, ERROR, "!");
       sys.exit(2);
     if not oInputZipFile.fbOpenAsZipFile(bParseZipFiles = True):
-      oConsole.fPrint(ERROR, "Cannot open input zip file ", ERROR_INFO, oInputZipFile.sPath, ERROR, "!");
+      oConsole.fOutput(ERROR, "Cannot open input zip file ", ERROR_INFO, oInputZipFile.sPath, ERROR, "!");
       sys.exit(3);
     
     if bExtractFiles:
       oOutputBaseFolder = cFileSystemItem(sOutputFolderPath);
       if oOutputBaseFolder.fbExists(bParseZipFiles = True):
         if not oOutputBaseFolder.fbIsFolder(bParseZipFiles = True):
-          oConsole.fPrint(ERROR, "Output folder ", ERROR_INFO, oOutputBaseFolder.sPath, ERROR, " exists but it is not a folder!");
+          oConsole.fOutput(ERROR, "Output folder ", ERROR_INFO, oOutputBaseFolder.sPath, ERROR, " exists but it is not a folder!");
           sys.exit(2);
       elif not oOutputBaseFolder.fbCreateAsFolder(bParseZipFiles = True):
-        oConsole.fPrint(ERROR, "Output folder ", ERROR_INFO, oOutputBaseFolder.sPath, ERROR, " cannot be created!");
+        oConsole.fOutput(ERROR, "Output folder ", ERROR_INFO, oOutputBaseFolder.sPath, ERROR, " cannot be created!");
         sys.exit(3);
     uTotalBytes = 0;
     # Get all descendants of the input folder, which can be iside a zip file (bParseZipFiles = True)
@@ -131,14 +116,14 @@ try:
         if oOutputFolder.fbExists(bParseZipFiles = True):
           if not oOutputFolder.fbIsFolder(bParseZipFiles = True):
             # File exists: error
-            oConsole.fPrint(ERROR, "Cannot create folder ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
+            oConsole.fOutput(ERROR, "Cannot create folder ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
                 oOutputBaseFolder.sPath, ERROR, ": a file with that name already exists!");
             sys.exit(3);
           # Folders exists: do nothing
         else:
           # Folders does not exist: create
           if not oOutputFolder.fbCreateAsFolder(bParseZipFiles = True):
-            oConsole.fPrint(ERROR, "Cannot create folder ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
+            oConsole.fOutput(ERROR, "Cannot create folder ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
                 oOutputBaseFolder.sPath, ERROR, ": a folder with that name already exists!");
             sys.exit(3);
         uProcessedFolders += 1;
@@ -147,48 +132,48 @@ try:
       sRelativePath = oInputZipFile.fsGetRelativePathTo(oInputFile);
       nProgress = 1.0 * (uProcessedFolders + uProcessedFiles) / (len(aoInputFolders) + len(aoInputFiles));
       oConsole.fProgressBar(nProgress, "* %s: reading..." % sRelativePath, bCenterMessage = False);
-      sData = oInputFileOrFolder.fsRead(bParseZipFiles = True);
-      uTotalBytes += len(sData);
+      sbData = oInputFileOrFolder.fsbRead(bParseZipFiles = True);
+      uTotalBytes += len(sbData);
       if bExtractFiles:
         oOutputFile = oOutputBaseFolder.foGetDescendant(sRelativePath, bParseZipFiles = True);
         if oOutputFile.fbExists(bParseZipFiles = True):
           if not oOutputFile.fbIsFile(bParseZipFiles = True):
             # Folders exists: error
-            oConsole.fPrint(ERROR, "Cannot create file ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
+            oConsole.fOutput(ERROR, "Cannot create file ", ERROR_INFO, sRelativePath, ERROR, " in folder ", ERROR_INFO,
                 oOutputBaseFolder.sPath, ERROR, ": a folder with that name already exists!");
             sys.exit(3);
           # File exists: overwrite
-          oConsole.fProgressBar(nProgress, "* %s: Overwriting (%d bytes)..." % (sRelativePath, len(sData)), bCenterMessage = False);
-          if not oOutputFile.fbWrite(sData):
-            oConsole.fPrint(ERROR, "Cannot write ", ERROR_INFO, str(len(sData)), ERROR, " bytes over existing file ", ERROR_INFO,
+          oConsole.fProgressBar(nProgress, "* %s: Overwriting (%d bytes)..." % (sRelativePath, len(sbData)), bCenterMessage = False);
+          if not oOutputFile.fbWrite(sbData):
+            oConsole.fOutput(ERROR, "Cannot write ", ERROR_INFO, str(len(sbData)), ERROR, " bytes over existing file ", ERROR_INFO,
                 sRelativePath, ERROR, " in folder ", ERROR_INFO, oOutputBaseFolder.sPath, ERROR, "!");
             sys.exit(3);
         else:
           # File does not exists: create
-          oConsole.fProgressBar(nProgress, "* %s: Creating (%d bytes)..." % (sRelativePath, len(sData)), bCenterMessage = False);
-          if not oOutputFile.fbCreateAsFile(sData, bParseZipFiles = True):
-            oConsole.fPrint(ERROR, "Cannot write ", ERROR_INFO, str(len(sData)), ERROR, " bytes to new file ", ERROR_INFO,
+          oConsole.fProgressBar(nProgress, "* %s: Creating (%d bytes)..." % (sRelativePath, len(sbData)), bCenterMessage = False);
+          if not oOutputFile.fbCreateAsFile(sbData, bParseZipFiles = True):
+            oConsole.fOutput(ERROR, "Cannot write ", ERROR_INFO, str(len(sbData)), ERROR, " bytes to new file ", ERROR_INFO,
                 sRelativePath, ERROR, " in folder ", ERROR_INFO, oOutputBaseFolder.sPath, ERROR, "!");
             sys.exit(3);
       else:
-        oConsole.fOutput("+ ", INFO, sRelativePath, NORMAL, " (", INFO, str(len(sData)), NORMAL, " bytes)...");
+        oConsole.fOutput("+ ", INFO, sRelativePath, NORMAL, " (", INFO, str(len(sbData)), NORMAL, " bytes)...");
       uProcessedFiles += 1;
     
     uTotalFolders = len(aoInputFolders);
     uTotalFiles = len(aoInputFiles);
     
     if not oInputZipFile.fbClose():
-      oConsole.fPrint(ERROR, "Input zip file ", ERROR_INFO, oInputZipFile.sPath, ERROR, " cannot be closed!");
+      oConsole.fOutput(ERROR, "Input zip file ", ERROR_INFO, oInputZipFile.sPath, ERROR, " cannot be closed!");
       sys.exit(5);
     
     if not bExtractFiles:
-      oConsole.fPrint(
+      oConsole.fOutput(
         "Found ", INFO, str(uTotalFiles), NORMAL, " files (",
         INFO, fsBytesToHumanReadableString(uTotalBytes), NORMAL, ") and ",
         INFO, str(uTotalFolders), NORMAL, " folders."
       );
       sys.exit(0);
-    oConsole.fPrint(
+    oConsole.fOutput(
       "Extracted ", INFO, str(uTotalFiles), NORMAL, " files (",
       INFO, fsBytesToHumanReadableString(uTotalBytes), NORMAL, ") and ",
       INFO, str(uTotalFolders), NORMAL, " folders to ",
@@ -197,6 +182,6 @@ try:
     sys.exit(0 if uTotalFiles == 0 else 1);
 
 except Exception as oException:
-  if fTerminateWithException:
-    fTerminateWithException(oException);
+  if m0DebugOutput:
+    m0DebugOutput.fTerminateWithException(oException);
   raise;
