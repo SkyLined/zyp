@@ -3,7 +3,7 @@ import sys;
 from fPrintUsageInformation import fPrintUsageInformation;
 from fPrintVersionInformation import fPrintVersionInformation;
 from fPrintLicenseInformation import fPrintLicenseInformation;
-from mColors import *;
+from mColorsAndChars import *;
 from mProductDetails import faoGetLicensesFromRegistry, faoGetLicensesFromFile;
 
 def fatsArgumentLowerNameAndValue():

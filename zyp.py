@@ -28,6 +28,7 @@ except ModuleNotFoundError as oException:
     raise;
   m0DebugOutput = None;
 
+guExitCodeInternalError = 1; # Just in case mExitCodes is not loaded, as we need this later.
 try:
   from mFileSystemItem import cFileSystemItem;
   from mHumanReadable import fsBytesToHumanReadableString;
@@ -35,7 +36,8 @@ try:
   
   from fasSortedAlphabetically import fasSortedAlphabetically;
   from fatsArgumentLowerNameAndValue import fatsArgumentLowerNameAndValue;
-  from mColors import *;
+  from mColorsAndChars import *;
+  from mExitCodes import *;
   
   if __name__ == "__main__":
     # Parse arguments
@@ -47,7 +49,10 @@ try:
         bVerbose = True;
       elif s0LowerName in ["-d", "/d", "--debug", "/debug"]:
         if m0DebugOutput is None:
-          oConsole.fOutput(ERROR, "The mDebugOutput module is not available!");
+          oConsole.fOutput(
+            COLOR_ERROR, CHAR_ERROR,
+            COLOR_NORMAL, " The mDebugOutput module is not available!",
+          );
           sys.exit(2);
         m0DebugOutput.fEnableAllDebugOutput();
       elif s0LowerName:
@@ -55,10 +60,16 @@ try:
       else:
         asFilesAndFoldersPathsAndPatterns.append(sArgument);
     if len(asFilesAndFoldersPathsAndPatterns) == 0:
-      oConsole.fOutput(ERROR, "Missing input file or folder argument!");
+      oConsole.fOutput(
+        COLOR_ERROR, CHAR_ERROR,
+        COLOR_NORMAL, " Missing input file or folder argument!",
+      );
       sys.exit(2);
     if len(asFilesAndFoldersPathsAndPatterns) == 1:
-      oConsole.fOutput(ERROR, "Missing output zip file argument!");
+      oConsole.fOutput(
+          COLOR_ERROR, CHAR_ERROR,
+          COLOR_NORMAL, " Missing output zip file argument!",
+        );
       sys.exit(2);
     
     asInputFilesAndFoldersPathsAndPatterns = asFilesAndFoldersPathsAndPatterns[:-1];
@@ -82,11 +93,22 @@ try:
           if rPattern.match(oChildFileOrFolder.sName)
         ];
         if len(aoInputFilesAndFolders) == 0:
-          oConsole.fOutput(ERROR, "Input file or folder pattern ", ERROR_INFO, oInputFileOrFolder.sPath, ERROR, " does not match anything!");
+          oConsole.fOutput(
+            COLOR_ERROR, CHAR_ERROR,
+            COLOR_NORMAL, " Input file or folder pattern ",
+            COLOR_INFO, oInputFileOrFolder.sPath,
+            COLOR_ERROR, " does not match anything!",
+          );
           sys.exit(4);
         if bVerbose:
-          oConsole.fOutput("+ Pattern ", INFO, str(sPattern), NORMAL, " matches ", INFO, str(len(aoInputFilesAndFolders)), NORMAL,
-              " files/folders:");
+          oConsole.fOutput(
+            COLOR_OK, CHAR_OK,
+            COLOR_NORMAL, " Pattern ",
+            COLOR_INFO, str(sPattern),
+            COLOR_NORMAL, " matches ",
+            COLOR_INFO, str(len(aoInputFilesAndFolders)),
+            COLOR_NORMAL, " files/folders:",
+          );
       else:
         oInputFileOrFolder = cFileSystemItem(sInputFilesAndFoldersPathOrPattern);
         aoInputFilesAndFolders = [oInputFileOrFolder];
@@ -108,14 +130,19 @@ try:
             )
           ];
         else:
-          oConsole.fOutput(ERROR, "Input file or folder ", ERROR_INFO, oInputFileOrFolder.sPath, ERROR, " not found!");
+          oConsole.fOutput(
+            COLOR_ERROR, CHAR_ERROR,
+            COLOR_NORMAL, " Input file or folder ",
+            COLOR_INFO, oInputFileOrFolder.sPath,
+            COLOR_ERROR, " not found!",
+          );
           sys.exit(4);
         if bVerbose and bAddedAllFilesInAFolder:
           if len(aoInputFiles) == 0:
-            oConsole.fOutput("  " if bContainsWildcard else "", "- Folder ", INFO, oInputFileOrFolder.sName, NORMAL, "/ contains no files.");
+            oConsole.fOutput("  " if bContainsWildcard else "", "- Folder ", COLOR_INFO, oInputFileOrFolder.sName, COLOR_NORMAL, "/ contains no files.");
           else:
-            oConsole.fOutput("  " if bContainsWildcard else "", "+ Folder ", INFO, oInputFileOrFolder.sName, NORMAL, "/ containing ",
-              INFO, str(len(aoInputFiles)), NORMAL, " files:");
+            oConsole.fOutput("  " if bContainsWildcard else "", "+ Folder ", COLOR_INFO, oInputFileOrFolder.sName, COLOR_NORMAL, "/ containing ",
+              COLOR_INFO, str(len(aoInputFiles)), COLOR_NORMAL, " files:");
         for oInputFile in aoInputFiles:
           sRelativePath = oBaseFolder.fsGetRelativePathTo(oInputFile);
           if sRelativePath in doInputFile_by_sRelativePathInOutputZip:
@@ -125,36 +152,67 @@ try:
               if bVerbose:
                 oConsole.fOutput(
                   "  " if bContainsWildcard else "", "  " if bAddedAllFilesInAFolder else "",
-                  "- File ", INFO, oBaseFolder.fsGetRelativePathTo(oInputFile), NORMAL, " already added."
+                  "- File ", COLOR_INFO, oBaseFolder.fsGetRelativePathTo(oInputFile), COLOR_NORMAL, " already added."
                 );
               continue;
             oConsole.fOutput(
-              ERROR, "Input files ", ERROR_INFO, oPreviousInputFile.sPath, ERROR, " and ",
-              ERROR_INFO, oInputFile.sPath, ERROR, " cannot both be stored as ", ERROR_INFO, sRelativePath, ERROR, "!"
+              COLOR_ERROR, CHAR_ERROR,
+              COLOR_NORMAL, " Input files ",
+              COLOR_INFO, oPreviousInputFile.sPath,
+              COLOR_ERROR, " and ",
+              COLOR_INFO, oInputFile.sPath,
+              COLOR_ERROR, " cannot both be stored as ",
+              COLOR_INFO, sRelativePath,
+              COLOR_ERROR, "!",
             );
             sys.exit(2);
           if bVerbose:
             oConsole.fOutput(
               "  " if bContainsWildcard else "", "  " if bAddedAllFilesInAFolder else "",
-              "+ File ", INFO, oBaseFolder.fsGetRelativePathTo(oInputFile), NORMAL, " (", INFO, fsBytesToHumanReadableString(oInputFile.fuGetSize()), NORMAL, ")."
+              "+ File ", COLOR_INFO, oBaseFolder.fsGetRelativePathTo(oInputFile), COLOR_NORMAL, " (", COLOR_INFO, fsBytesToHumanReadableString(oInputFile.fuGetSize()), COLOR_NORMAL, ")."
             );
           doInputFile_by_sRelativePathInOutputZip[sRelativePath] = oInputFile;
     if oOutputZipFile.fbExists(bParseZipFiles = True):
       try:
         oOutputZipFile.fbDelete(bParseZipFiles = True, bThrowErrors = True);
       except Exception as oException:
-        oConsole.fOutput(ERROR, "Existing output zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, " cannot be deleted: ", ERROR_INFO, repr(oException), ERROR, "!");
+        oConsole.fOutput(
+          COLOR_ERROR, CHAR_ERROR,
+          COLOR_NORMAL, " Existing output zip file ",
+          COLOR_INFO, oOutputZipFile.sPath,
+          COLOR_ERROR, " cannot be deleted: ",
+          COLOR_INFO, repr(oException),
+          COLOR_ERROR, "!",
+        );
         sys.exit(5);
       if bVerbose:
-        oConsole.fOutput("+ Deleted existing zip file ", INFO, oOutputZipFile.sPath, NORMAL, ".");
+        oConsole.fOutput(
+          COLOR_OK, CHAR_OK,
+          COLOR_NORMAL, " Deleted existing zip file ",
+          COLOR_INFO, oOutputZipFile.sPath,
+          COLOR_NORMAL, ".",
+        );
     try:
       oOutputZipFile.fbCreateAsZipFile(bParseZipFiles = True, bKeepOpen = True, bThrowErrors = True);
     except Exception as oException:
-      oConsole.fOutput(ERROR, "Output zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, " cannot be created: ", ERROR_INFO, repr(oException), ERROR, "!");
+      oConsole.fOutput(
+        COLOR_ERROR, CHAR_ERROR,
+        COLOR_NORMAL, " Output zip file ",
+        COLOR_INFO, oOutputZipFile.sPath,
+        COLOR_ERROR, " cannot be created: ",
+        COLOR_INFO, repr(oException),
+        COLOR_ERROR, "!",
+      );
       sys.exit(5);
     uTotalFiles = len(doInputFile_by_sRelativePathInOutputZip);
     if bVerbose:
-      oConsole.fOutput("* Adding ", INFO, str(uTotalFiles), NORMAL, " files to ", INFO, oOutputZipFile.sPath, NORMAL, ":");
+      oConsole.fOutput(
+        "* Adding ",
+        COLOR_INFO, str(uTotalFiles),
+        COLOR_NORMAL, " files to ",
+        COLOR_INFO, oOutputZipFile.sPath,
+        COLOR_NORMAL, ":",
+      );
     uProcessedBytes = 0;
     uProcessedFiles = 0;
     for sRelativePath in fasSortedAlphabetically(doInputFile_by_sRelativePathInOutputZip.keys()):
@@ -169,9 +227,16 @@ try:
           oOutputFile.fbWrite(sbData, bThrowErrors = True);
         except Exception as oException:
           oConsole.fOutput(
-            ERROR, "Cannot write ", ERROR_INFO, fsBytesToHumanReadableString(len(sbData)), ERROR,
-            " over existing file ", ERROR_INFO, sRelativePath, ERROR,
-            " in zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, ":", ERROR_INFO, repr(oException), ERROR, "!"
+            COLOR_ERROR, CHAR_ERROR,
+            COLOR_NORMAL, " Cannot write ",
+            COLOR_INFO, fsBytesToHumanReadableString(len(sbData)),
+            COLOR_ERROR, " over existing file ",
+            COLOR_INFO, sRelativePath,
+            COLOR_ERROR, " in zip file ",
+            COLOR_INFO, oOutputZipFile.sPath,
+            COLOR_ERROR, ":",
+            COLOR_INFO, repr(oException),
+            COLOR_ERROR, "!",
           );
           sys.exit(5);
       else:
@@ -180,9 +245,16 @@ try:
           oOutputFile.fbCreateAsFile(sbData, bParseZipFiles = True, bThrowErrors = True);
         except Exception as oException:
           oConsole.fOutput(
-            ERROR, "Cannot write ", ERROR_INFO, fsBytesToHumanReadableString(len(sbData)), ERROR,
-            " to new file ", ERROR_INFO, sRelativePath, ERROR,
-            " in zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, ":", ERROR_INFO, repr(oException), ERROR, "!"
+            COLOR_ERROR, CHAR_ERROR,
+            COLOR_NORMAL, " Cannot write ",
+            COLOR_INFO, fsBytesToHumanReadableString(len(sbData)),
+            COLOR_ERROR, " to new file ",
+            COLOR_INFO, sRelativePath,
+            COLOR_ERROR, " in zip file ",
+            COLOR_INFO, oOutputZipFile.sPath,
+            COLOR_ERROR, ":",
+            COLOR_INFO, repr(oException),
+            COLOR_ERROR, "!",
           );
           sys.exit(5);
       uProcessedBytes += len(sbData);
@@ -191,18 +263,30 @@ try:
     try:
       oOutputZipFile.fbClose(bThrowErrors = True);
     except Exception as oException:
-      oConsole.fOutput(ERROR, "Output zip file ", ERROR_INFO, oOutputZipFile.sPath, ERROR, " cannot be closed:", ERROR_INFO, repr(oException), ERROR, "!");
+      oConsole.fOutput(
+        COLOR_ERROR, CHAR_ERROR,
+        COLOR_NORMAL, " Output zip file ",
+        COLOR_INFO, oOutputZipFile.sPath,
+        COLOR_ERROR, " cannot be closed:",
+        COLOR_INFO, str(oException),
+        COLOR_ERROR, "!",
+      );
       sys.exit(5);
     
     uFileSizeInBytes = oOutputZipFile.fuGetSize();
     oConsole.fOutput(
-      "Added ", INFO, fsBytesToHumanReadableString(uProcessedBytes), NORMAL, ", resulting in a ",
-      INFO, fsBytesToHumanReadableString(uFileSizeInBytes), NORMAL, " zip file (",
-      INFO, str(uFileSizeInBytes * 100 / uProcessedBytes), NORMAL, "% of original size)."
+      COLOR_OK, CHAR_OK,
+      COLOR_NORMAL, " Added ",
+      COLOR_INFO, fsBytesToHumanReadableString(uProcessedBytes),
+      COLOR_NORMAL, ", resulting in a ",
+      COLOR_INFO, fsBytesToHumanReadableString(uFileSizeInBytes),
+      COLOR_NORMAL, " zip file (",
+      COLOR_INFO, str(uFileSizeInBytes * 100 / uProcessedBytes),
+      COLOR_NORMAL, "% of original size).",
     );
     sys.exit(0 if uProcessedFiles == 0 else 1);
-
+   
 except Exception as oException:
   if m0DebugOutput:
-    m0DebugOutput.fTerminateWithException(oException);
+    m0DebugOutput.fTerminateWithException(oException, guExitCodeInternalError);
   raise;
