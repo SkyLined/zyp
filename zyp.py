@@ -1,23 +1,15 @@
-import re, sys;
-
-"""
-                                                                                
+"""                                                                             
         .dSSSSSSSP' YSb   ,dSP' iSSSSSSb                                        
             ,dSP'    YSb,dSP'  iSP` _7SP     Python zip compression utility     
           ,dSP'       )dSP'   iSSSSSS*'                                         
         ,dSP'       ,dSP'    iSP`          http://github.com/SkyLined/zyp       
       .dSSSSSSP'  .dSP'     iSP`                                                
-                                                                                
-"""
+                                                                            """;
 
-# Running this script will return an exit code, which translates as such:
-# 0 = executed successfully, nothing to compress.
-# 1 = executed successfully, files compressed.
-# 2 = bad arguments
-# 3 = internal error
-# 4 = cannot read from uncompressed file or folder.
-# 5 = cannot write to compressed zip file.
+import os, re, sys;
 
+sModulePath = os.path.dirname(__file__);
+sys.path = [sModulePath] + [sPath for sPath in sys.path if sPath.lower() != sModulePath.lower()];
 from fInitializeProduct import fInitializeProduct;
 fInitializeProduct();
 

@@ -1,23 +1,15 @@
-import sys;
-
-"""
-                                                                                
+"""                                                                             
         .dSSSSSSSP' YSb   ,dSP' iSSSSSSb                                        
    UN-      ,dSP'    YSb,dSP'  iSP` _7SP     Python unzip decompression utility 
           ,dSP'       )dSP'   iSSSSSS*'                                         
         ,dSP'       ,dSP'    iSP`          http://github.com/SkyLined/zyp       
       .dSSSSSSP'  .dSP'     iSP`                                                
-                                                                                
-"""
+                                                                            """;
 
-# Running this script will return an exit code, which translates as such:
-# 0 = executed successfully, nothing to uncompress.
-# 1 = executed successfully, files uncompressed.
-# 2 = bad arguments
-# 3 = internal error
-# 4 = cannot read from compressed zip file
-# 5 = cannot write to decompressed file or create folder.
+import os, sys;
 
+sModulePath = os.path.dirname(__file__);
+sys.path = [sModulePath] + [sPath for sPath in sys.path if sPath.lower() != sModulePath.lower()];
 from fInitializeProduct import fInitializeProduct;
 fInitializeProduct();
 
