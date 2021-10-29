@@ -3,19 +3,19 @@
     "mDebugOutput"
   ],
   "a0sDependentOnProductNames": [
+    "mConsole",
+    "mDateTime",
     "mFileSystemItem",
     "mHumanReadable",
-    "mDateTime",
     "mNotProvided",
     "mProductDetails",
     "mRegistry",
     "mWindowsAPI",
-    "mWindowsSDK",
-    "mConsole"
+    "mWindowsSDK"
   ],
   "a0sPythonApplicationNames": [
-    "zyp",
-    "unzyp"
+    "unzyp",
+    "zyp"
   ],
   "asProductTypes": [
     "Python application"
@@ -27,7 +27,7 @@
     "sbRepositoryName": "zyp",
     "sbUserName": "SkyLined"
   },
-  "oProductVersion": "2021-07-30 12:10",
+  "oProductVersion": "2021-10-29 09:59",
   "sProductAuthor": "SkyLined",
   "sProductName": "zyp",
   "sStructureVersion": "2021-07-02 11:16",
