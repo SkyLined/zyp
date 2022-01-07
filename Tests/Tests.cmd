@@ -36,7 +36,7 @@ ECHO   * Zipping test file...
 ECHO Hello, world! >"%TEST_FILE_PATH%"
 IF ERRORLEVEL 1 GOTO :ERROR
 CALL "%~dp0\..\zyp.cmd" "%TEST_FILE_PATH%" "%TEST_ZIP_FILE_PATH%"
-IF NOT %ERRORLEVEL% == 1 GOTO :ERROR
+IF ERRORLEVEL 1 GOTO :ERROR
 DEL "%TEST_FILE_PATH%" /Q
 
 ECHO   * Listing zipped test file...
@@ -45,7 +45,7 @@ IF ERRORLEVEL 1 GOTO :ERROR
 
 ECHO   * Unzipping test file...
 CALL "%~dp0\..\unzyp.cmd" "%TEST_ZIP_FILE_PATH%" "%TEMP%"
-IF NOT %ERRORLEVEL% == 1 GOTO :ERROR
+IF ERRORLEVEL 1 GOTO :ERROR
 IF NOT EXIST "%TEST_FILE_PATH%" (
   ECHO Unzipping did not re-create test file!
   DEL %TEST_ZIP_FILE_PATH% /Q
