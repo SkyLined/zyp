@@ -9,3 +9,4 @@ guExitCodeCannotReadFromFileSystem       = 5;
 guExitCodeCannotWriteToFileSystem        = 6;
 guExitCodeTerminatedByUser               = 7;
 # These are specific to this particular script:
+guExitCodeNothingToDo                    = 10;

@@ -45,7 +45,7 @@ try:
             COLOR_ERROR, CHAR_ERROR,
             COLOR_NORMAL, " The mDebugOutput module is not available!",
           );
-          sys.exit(2);
+          sys.exit(guExitCodeBadArgument);
         m0DebugOutput.fEnableAllDebugOutput();
       elif s0LowerName:
         fExitWithError("Unknown argument \"%s\"" % sArgument);
@@ -56,13 +56,13 @@ try:
         COLOR_ERROR, CHAR_ERROR,
         COLOR_NORMAL, " Missing input file or folder argument!",
       );
-      sys.exit(2);
+      sys.exit(guExitCodeBadArgument);
     if len(asFilesAndFoldersPathsAndPatterns) == 1:
       oConsole.fOutput(
           COLOR_ERROR, CHAR_ERROR,
           COLOR_NORMAL, " Missing output zip file argument!",
         );
-      sys.exit(2);
+      sys.exit(guExitCodeBadArgument);
     
     asInputFilesAndFoldersPathsAndPatterns = asFilesAndFoldersPathsAndPatterns[:-1];
     sOutputZipFilePath = asFilesAndFoldersPathsAndPatterns[-1];
@@ -91,7 +91,7 @@ try:
             COLOR_INFO, oInputFileOrFolder.sPath,
             COLOR_ERROR, " does not match anything!",
           );
-          sys.exit(4);
+          sys.exit(guExitCodeBadArgument);
         if bVerbose:
           oConsole.fOutput(
             COLOR_OK, CHAR_OK,
@@ -128,7 +128,7 @@ try:
             COLOR_INFO, oInputFileOrFolder.sPath,
             COLOR_ERROR, " not found!",
           );
-          sys.exit(4);
+          sys.exit(guExitCodeBadArgument);
         if bVerbose and bAddedAllFilesInAFolder:
           if len(aoInputFiles) == 0:
             oConsole.fOutput("  " if bContainsWildcard else "", "- Folder ", COLOR_INFO, oInputFileOrFolder.sName, COLOR_NORMAL, "/ contains no files.");
@@ -157,7 +157,7 @@ try:
               COLOR_INFO, sRelativePath,
               COLOR_ERROR, "!",
             );
-            sys.exit(2);
+            sys.exit(guExitCodeBadArgument);
           if bVerbose:
             oConsole.fOutput(
               "  " if bContainsWildcard else "", "  " if bAddedAllFilesInAFolder else "",
@@ -176,7 +176,7 @@ try:
           COLOR_INFO, repr(oException),
           COLOR_ERROR, "!",
         );
-        sys.exit(5);
+        sys.exit(guExitCodeCannotWriteToFileSystem);
       if bVerbose:
         oConsole.fOutput(
           COLOR_OK, CHAR_OK,
@@ -195,7 +195,7 @@ try:
         COLOR_INFO, repr(oException),
         COLOR_ERROR, "!",
       );
-      sys.exit(5);
+      sys.exit(guExitCodeCannotWriteToFileSystem);
     uTotalFiles = len(doInputFile_by_sRelativePathInOutputZip);
     if bVerbose:
       oConsole.fOutput(
@@ -230,7 +230,7 @@ try:
             COLOR_INFO, repr(oException),
             COLOR_ERROR, "!",
           );
-          sys.exit(5);
+          sys.exit(guExitCodeCannotWriteToFileSystem);
       else:
         oConsole.fProgressBar(nProgress, "* %s: Creating (%s)..." % (sRelativePath, fsBytesToHumanReadableString(len(sbData))));
         try:
@@ -248,7 +248,7 @@ try:
             COLOR_INFO, repr(oException),
             COLOR_ERROR, "!",
           );
-          sys.exit(5);
+          sys.exit(guExitCodeCannotWriteToFileSystem);
       uProcessedBytes += len(sbData);
       uProcessedFiles += 1;
     
@@ -263,7 +263,7 @@ try:
         COLOR_INFO, str(oException),
         COLOR_ERROR, "!",
       );
-      sys.exit(5);
+      sys.exit(guExitCodeCannotWriteToFileSystem);
     
     uFileSizeInBytes = oOutputZipFile.fuGetSize();
     oConsole.fOutput(
@@ -276,7 +276,7 @@ try:
       COLOR_INFO, str(uFileSizeInBytes * 100 / uProcessedBytes),
       COLOR_NORMAL, "% of original size).",
     );
-    sys.exit(0 if uProcessedFiles == 0 else 1);
+    sys.exit(guExitCodeNothingToDo if uProcessedFiles == 0 else guExitCodeSuccess);
    
 except Exception as oException:
   if m0DebugOutput:
