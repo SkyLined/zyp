@@ -35,11 +35,12 @@ try:
     # Parse arguments
     s0InputZipFilePath = None;
     s0OutputFolderPath = None;
+    bVerbose = False;
     bExtractFiles = True;
     for (sArgument, s0LowerName, s0Value) in fatsArgumentLowerNameAndValue():
-      if s0LowerName in ["l", "list"]:
-        bExtractFiles = False;
-      elif s0LowerName in ["debug"]:
+      if s0LowerName in ["-v", "/v", "--verbose", "/verbose"]:
+        bVerbose = True;
+      elif s0LowerName in ["-d", "/d", "--debug", "/debug"]:
         if m0DebugOutput is None:
           oConsole.fOutput(
             COLOR_ERROR, CHAR_ERROR,
@@ -47,6 +48,8 @@ try:
           );
           sys.exit(guExitCodeBadArgument);
         m0DebugOutput.fEnableAllDebugOutput();
+      elif s0LowerName in ["l", "list"]:
+        bExtractFiles = False;
       elif s0LowerName:
         oConsole.fOutput(
           COLOR_ERROR, CHAR_ERROR,
@@ -64,7 +67,7 @@ try:
           COLOR_ERROR, CHAR_ERROR,
           COLOR_NORMAL, " Superfluous argument ",
           COLOR_INFO, sArgument,
-          COLOR_ERROR, "!",
+          COLOR_NORMAL, "!",
         );
         sys.exit(guExitCodeBadArgument);
     if s0InputZipFilePath is None:
@@ -75,29 +78,37 @@ try:
       sys.exit(guExitCodeBadArgument);
     # Check input zip file path argument.
     oInputZipFile = cFileSystemItem(s0InputZipFilePath);
-    if not oInputZipFile.fbExists(bParseZipFiles = True, bThrowErrors = False):
+    if not oInputZipFile.fbExists(bParseZipFiles = True):
       oConsole.fOutput(
         COLOR_ERROR, CHAR_ERROR,
         COLOR_NORMAL, " Input zip ",
         COLOR_INFO, oInputZipFile.sPath,
-        COLOR_ERROR, " does not exist!",
+        COLOR_NORMAL, " does not exist!",
       );
       sys.exit(guExitCodeBadArgument);
-    if not oInputZipFile.fbIsFile(bParseZipFiles = True, bThrowErrors = False):
+    if not oInputZipFile.fbIsFile(bParseZipFiles = True):
       oConsole.fOutput(
         COLOR_ERROR, CHAR_ERROR,
         COLOR_NORMAL, " Input zip ",
         COLOR_INFO, oInputZipFile.sPath,
-        COLOR_ERROR, " is not a file!",
+        COLOR_NORMAL, " is not a file!",
       );
       sys.exit(guExitCodeBadArgument);
-    if not oInputZipFile.fbOpenAsZipFile(bParseZipFiles = True, bThrowErrors = False):
+    if not oInputZipFile.fbIsValidZipFile(bThrowErrors = False):
+      oConsole.fOutput(
+        COLOR_ERROR, CHAR_ERROR,
+        COLOR_NORMAL, " Input zip ",
+        COLOR_INFO, oInputZipFile.sPath,
+        COLOR_NORMAL, " is not a valid zip file!",
+      );
+      sys.exit(guExitCodeBadArgument);
+    if not oInputZipFile.fbOpenAsZipFile(bParseZipFiles = True):
       oConsole.fOutput(
         COLOR_ERROR, CHAR_ERROR,
         COLOR_NORMAL, "Input zip ",
         COLOR_INFO, oInputZipFile.sPath,
-        COLOR_ERROR, " cannot be opened!",
-        );
+        COLOR_NORMAL, " cannot be opened!",
+      );
       sys.exit(3);
     
     if bExtractFiles:
@@ -108,27 +119,27 @@ try:
             COLOR_ERROR, CHAR_ERROR,
             COLOR_NORMAL, "You must provide an output folder argument because the input zip ",
             COLOR_INFO, oInputZipFile.sPath,
-            COLOR_ERROR, " does not have an extension!",
+            COLOR_NORMAL, " does not have an extension!",
           );
           sys.exit(guExitCodeBadArgument);
         s0OutputFolderPath = oInputZipFile.sPath[:-len(oInputZipFile.s0Extension) - 1];
       # Check output folder path argument (or the previously generated one).
       oOutputBaseFolder = cFileSystemItem(s0OutputFolderPath);
-      if not oOutputBaseFolder.fbExists(bParseZipFiles = True, bThrowErrors = False):
-        if not oOutputBaseFolder.fbCreateAsFolder(bParseZipFiles = True, bThrowErrors = False):
+      if not oOutputBaseFolder.fbExists(bParseZipFiles = True):
+        if not oOutputBaseFolder.fbCreateAsFolder(bParseZipFiles = True):
           oConsole.fOutput(
             COLOR_ERROR, CHAR_ERROR,
             COLOR_NORMAL, " Output folder ",
             COLOR_INFO, oOutputBaseFolder.sPath,
-            COLOR_ERROR, " cannot be created!",
+            COLOR_NORMAL, " cannot be created!",
           );
           sys.exit(guExitCodeCannotWriteToFileSystem);
-      elif not oOutputBaseFolder.fbIsFolder(bParseZipFiles = True, bThrowErrors = False):
+      elif not oOutputBaseFolder.fbIsFolder(bParseZipFiles = True):
         oConsole.fOutput(
           COLOR_ERROR, CHAR_ERROR,
           COLOR_NORMAL, " Output folder ",
           COLOR_INFO, oOutputBaseFolder.sPath,
-          COLOR_ERROR, " is not a folder!",
+          COLOR_NORMAL, " is not a folder!",
         );
         sys.exit(guExitCodeBadArgument);
     
@@ -137,13 +148,13 @@ try:
     # Do not get descendants of descendants if they are zip files (bParseDescendantZipFiles = False) as we will
     # simply copy them as is without parsing them.
     oConsole.fStatus("* Reading root folder...");
-    a0oQueuedInputFilesAndFoldersToBeEnumerated = oInputZipFile.fa0oGetChildren(bParseZipFiles = True, bThrowErrors = False);
+    a0oQueuedInputFilesAndFoldersToBeEnumerated = oInputZipFile.fa0oGetChildren(bParseZipFiles = True);
     if not a0oQueuedInputFilesAndFoldersToBeEnumerated:
       oConsole.fOutput(
         COLOR_ERROR, CHAR_ERROR,
         COLOR_NORMAL, " Input zip file ",
-        COLOR_INFO, oOutputBaseFolder.sPath,
-        COLOR_ERROR, " cannot be read!",
+        COLOR_INFO, oInputZipFile.sPath,
+        COLOR_NORMAL, " cannot be read!",
       );
       sys.exit(guExitCodeCannotReadFromFileSystem);
     aoInputFolders = [];
@@ -151,7 +162,7 @@ try:
     while len(a0oQueuedInputFilesAndFoldersToBeEnumerated) > 0:
       oInputFileOrFolder = a0oQueuedInputFilesAndFoldersToBeEnumerated.pop(0);
       sRelativePath = oInputZipFile.fsGetRelativePathTo(oInputFileOrFolder);
-      bIsFolder = oInputFileOrFolder.fbIsFolder(bParseZipFiles = True, bThrowErrors = False);
+      bIsFolder = oInputFileOrFolder.fbIsFolder(bParseZipFiles = True);
       if bIsFolder:
         aoInputFolders.append(oInputFileOrFolder);
         # Queue children of the folder at the top, so we walk it like a tree, branch by branch.
@@ -165,13 +176,13 @@ try:
           COLOR_INFO, sRelativePath,
           COLOR_NORMAL, "...",
         );
-        a0oChildren = oInputFileOrFolder.fa0oGetChildren(bParseZipFiles = True, bThrowErrors = False);
+        a0oChildren = oInputFileOrFolder.fa0oGetChildren(bParseZipFiles = True);
         if a0oChildren is None:
           oConsole.fOutput(
             COLOR_ERROR, CHAR_ERROR,
             COLOR_NORMAL, " Input zip file ",
             COLOR_INFO, oOutputBaseFolder.sPath,
-            COLOR_ERROR, " cannot be read!",
+            COLOR_NORMAL, " cannot be read!",
           );
           sys.exit(guExitCodeCannotReadFromFileSystem);
         a0oQueuedInputFilesAndFoldersToBeEnumerated = a0oChildren + a0oQueuedInputFilesAndFoldersToBeEnumerated;
@@ -182,40 +193,40 @@ try:
     if bExtractFiles:
       for oInputFolder in aoInputFolders:
         sRelativePath = oInputZipFile.fsGetRelativePathTo(oInputFolder);
-        o0OutputFolder = oOutputBaseFolder.fo0GetDescendant(sRelativePath, bParseZipFiles = True, bThrowErrors = False);
+        o0OutputFolder = oOutputBaseFolder.fo0GetDescendant(sRelativePath, bParseZipFiles = True);
         if not o0OutputFolder:
           oConsole.fOutput(
             COLOR_ERROR, CHAR_ERROR,
             COLOR_NORMAL, " Output folder ",
             COLOR_INFO, oOutputBaseFolder.sPath,
-            COLOR_ERROR, " cannot be found!",
+            COLOR_NORMAL, " cannot be found!",
           );
           sys.exit(guExitCodeBadArgument);
         nProgress = 1.0 * (uProcessedFolders + uProcessedFiles) / (len(aoInputFolders) + len(aoInputFiles));
         oConsole.fProgressBar(nProgress, "* %s: Creating folder..." % sRelativePath, bCenterMessage = False);
-        if oOutputFolder.fbExists(bParseZipFiles = True, bThrowErrors = False):
-          if not oOutputFolder.fbIsFolder(bParseZipFiles = True, bThrowErrors = False):
+        if oOutputFolder.fbExists(bParseZipFiles = True):
+          if not oOutputFolder.fbIsFolder(bParseZipFiles = True):
             # File exists: error
             oConsole.fOutput(
               COLOR_ERROR, CHAR_ERROR,
               COLOR_NORMAL, "Cannot create folder ",
               COLOR_INFO, sRelativePath,
-              COLOR_ERROR, " in folder ",
+              COLOR_NORMAL, " in folder ",
               COLOR_INFO, oOutputBaseFolder.sPath,
-              COLOR_ERROR, ": a file with that name already exists!",
+              COLOR_NORMAL, ": a file with that name already exists!",
             );
             sys.exit(guExitCodeCannotWriteToFileSystem);
           # Folders exists: do nothing
         else:
           # Folders does not exist: create
-          if not oOutputFolder.fbCreateAsFolder(bParseZipFiles = True, bThrowErrors = False):
+          if not oOutputFolder.fbCreateAsFolder(bParseZipFiles = True):
             oConsole.fOutput(
               COLOR_ERROR, CHAR_ERROR,
               COLOR_NORMAL, "Cannot create folder ",
               COLOR_INFO, sRelativePath,
-              COLOR_ERROR, " in folder ",
+              COLOR_NORMAL, " in folder ",
               COLOR_INFO, oOutputBaseFolder.sPath,
-              COLOR_ERROR, "!",
+              COLOR_NORMAL, "!",
             );
             sys.exit(guExitCodeCannotWriteToFileSystem);
         uProcessedFolders += 1;
@@ -224,79 +235,117 @@ try:
       sRelativePath = oInputZipFile.fsGetRelativePathTo(oInputFile);
       nProgress = 1.0 * (uProcessedFolders + uProcessedFiles) / (len(aoInputFolders) + len(aoInputFiles));
       oConsole.fProgressBar(nProgress, "* %s: reading..." % sRelativePath, bCenterMessage = False);
-      sb0Data = oInputFileOrFolder.fsb0Read(bParseZipFiles = True, bThrowErrors = False);
+      sb0Data = oInputFileOrFolder.fsb0Read(bParseZipFiles = True);
       if sb0Data is None:
         oConsole.fOutput(
           COLOR_ERROR, CHAR_ERROR,
           COLOR_NORMAL, "Cannot read input file ",
           COLOR_INFO, sRelativePath,
-          COLOR_ERROR, " in zip file ",
+          COLOR_NORMAL, " in zip file ",
           COLOR_INFO, oInputZipFile.sPath,
-          COLOR_ERROR, "!",
+          COLOR_NORMAL, "!",
         );
         sys.exit(guExitCodeCannotReadFromFileSystem);
-      uTotalBytes += len(sbData);
+      uTotalBytes += len(sb0Data);
       if bExtractFiles:
-        o0OutputFile = oOutputBaseFolder.fo0GetDescendant(sRelativePath, bParseZipFiles = True, bThrowErrors = False);
+        o0OutputFile = oOutputBaseFolder.fo0GetDescendant(sRelativePath, bParseZipFiles = True);
         if o0OutputFile is None:
           oConsole.fOutput(
             COLOR_ERROR, CHAR_ERROR,
             COLOR_NORMAL, "Cannot find output file ",
             COLOR_INFO, sRelativePath,
-            COLOR_ERROR, " in folder ",
+            COLOR_NORMAL, " in folder ",
             COLOR_INFO, oOutputBaseFolder.sPath,
-            COLOR_ERROR, "!",
+            COLOR_NORMAL, "!",
           );
           sys.exit(guExitCodeCannotReadFromFileSystem);
-        elif o0OutputFile.fbExists(bParseZipFiles = True, bThrowErrors = False):
-          if not oOutputFile.fbIsFile(bParseZipFiles = True, bThrowErrors = False):
+        elif o0OutputFile.fbExists(bParseZipFiles = True):
+          if not o0OutputFile.fbIsFile(bParseZipFiles = True):
             # Folders exists: error
             oConsole.fOutput(
               COLOR_ERROR, CHAR_ERROR,
               COLOR_NORMAL, "Cannot create file ",
               COLOR_INFO, sRelativePath,
-              COLOR_ERROR, " in folder ",
+              COLOR_NORMAL, " in folder ",
               COLOR_INFO, oOutputBaseFolder.sPath,
-              COLOR_ERROR, ": a folder with that name already exists!",
+              COLOR_NORMAL, ": a folder with that name already exists!",
             );
             sys.exit(guExitCodeCannotWriteToFileSystem);
           # File exists: overwrite
-          oConsole.fProgressBar(nProgress, "* %s: Overwriting (%d bytes)..." % (sRelativePath, len(sbData)), bCenterMessage = False);
-          if not oOutputFile.fbWrite(sbData, bThrowErrors = False):
+          oConsole.fProgressBar(nProgress, "* %s: Overwriting (%s)..." % (sRelativePath, fsBytesToHumanReadableString(len(sb0Data))), bCenterMessage = False);
+          if not o0OutputFile.fbWrite(sb0Data):
             oConsole.fOutput(
               COLOR_ERROR, CHAR_ERROR,
               COLOR_NORMAL, "Cannot write ",
-              COLOR_INFO, str(len(sbData)),
-              COLOR_ERROR, " bytes over existing file ",
+              COLOR_INFO, fsBytesToHumanReadableString(len(sb0Data)),
+              COLOR_NORMAL, " over existing file ",
               COLOR_INFO, sRelativePath,
-              COLOR_ERROR, " in folder ",
+              COLOR_NORMAL, " in folder ",
               COLOR_INFO, oOutputBaseFolder.sPath,
-              COLOR_ERROR, "!",
+              COLOR_NORMAL, "!",
             );
             sys.exit(guExitCodeCannotWriteToFileSystem);
         else:
           # File does not exists: create
-          oConsole.fProgressBar(nProgress, "* %s: Creating (%d bytes)..." % (sRelativePath, len(sbData)), bCenterMessage = False);
-          if not oOutputFile.fbCreateAsFile(sbData, bParseZipFiles = True, bThrowErrors = False):
+          oConsole.fProgressBar(nProgress, "* %s: Creating (%s)..." % (sRelativePath, fsBytesToHumanReadableString(len(sb0Data))), bCenterMessage = False);
+          if not o0OutputFile.fbCreateAsFile(sb0Data, bParseZipFiles = True):
             oConsole.fOutput(
               COLOR_ERROR, CHAR_ERROR,
               COLOR_NORMAL, " Cannot write ",
-              COLOR_INFO, str(len(sbData)),
-              COLOR_ERROR, " bytes to new file ",
+              COLOR_INFO, fsBytesToHumanReadableString(len(sb0Data)),
+              COLOR_NORMAL, " to new file ",
               COLOR_INFO, sRelativePath,
-              COLOR_ERROR, " in folder ",
+              COLOR_NORMAL, " in folder ",
               COLOR_INFO, oOutputBaseFolder.sPath,
-              COLOR_ERROR, "!",
+              COLOR_NORMAL, "!",
             );
             sys.exit(3);
+        if bVerbose:
+          try:
+            uCompressedSize = oInputFileOrFolder.fuGetCompressedSize();
+          except Exception as oException:
+            oConsole.fOutput(
+              COLOR_ERROR, CHAR_ERROR,
+              COLOR_NORMAL, " Cannot read compressed file size of ",
+              COLOR_INFO, sRelativePath,
+              COLOR_NORMAL, " in zip file ",
+              COLOR_INFO, oInputZipFile.sPath,
+              COLOR_NORMAL, "!",
+            );
+            raise;
+          oConsole.fOutput(
+            COLOR_ADD, CHAR_ADD,
+            COLOR_NORMAL, " Extracted ",
+            COLOR_INFO, sRelativePath,
+            COLOR_NORMAL, " (",
+            COLOR_INFO, fsBytesToHumanReadableString(uCompressedSize),
+            COLOR_NORMAL, " => ",
+            COLOR_INFO, fsBytesToHumanReadableString(len(sb0Data)),
+            COLOR_NORMAL, ")",
+          );
+          
       else:
+        try:
+          uCompressedSize = oInputFileOrFolder.fuGetCompressedSize();
+        except Exception as oException:
+          oConsole.fOutput(
+            COLOR_ERROR, CHAR_ERROR,
+            COLOR_NORMAL, " Cannot read compressed file size of ",
+            COLOR_INFO, sRelativePath,
+            COLOR_NORMAL, " in zip file ",
+            COLOR_INFO, oInputZipFile.sPath,
+            COLOR_NORMAL, "!",
+          );
+          raise;
         oConsole.fOutput(
           COLOR_ADD, CHAR_ADD,
           COLOR_NORMAL, " ",
           COLOR_INFO, sRelativePath,
           COLOR_NORMAL, " (",
-          COLOR_INFO, str(len(sbData)),
-          COLOR_NORMAL, " bytes)."
+            COLOR_INFO, fsBytesToHumanReadableString(uCompressedSize),
+            COLOR_NORMAL, " => ",
+            COLOR_INFO, fsBytesToHumanReadableString(len(sb0Data)),
+          COLOR_NORMAL, ")"
         );
       uProcessedFiles += 1;
     
