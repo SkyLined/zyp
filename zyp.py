@@ -79,16 +79,25 @@ try:
         oInputFilesAndFoldersPatternBaseFolder = oInputFilesAndFoldersPatternFileSystemItem.oParent;
         sPattern = oInputFilesAndFoldersPatternFileSystemItem.sName;
         rPattern = re.compile("^%s$" % re.escape(sPattern).replace("\\*", ".*").replace("\\?", "."));
+        a0oChildren = oInputFilesAndFoldersPatternBaseFolder.fa0oGetChildren(bParseZipFiles = True, bThrowErrors = False);
+        if a0oChildren is None:
+          oConsole.fOutput(
+            COLOR_ERROR, CHAR_ERROR,
+            COLOR_NORMAL, " Input file or folder ",
+            COLOR_INFO, oInputFilesAndFoldersPatternBaseFolder.sPath,
+            COLOR_ERROR, " cannot be read!",
+          );
+          sys.exit(guExitCodeCannotReadFromFileSystem);
         aoInputFilesAndFolders = [
           oChildFileOrFolder
-          for oChildFileOrFolder in oInputFilesAndFoldersPatternBaseFolder.faoGetChildren(bParseZipFiles = True)
+          for oChildFileOrFolder in a0oChildren
           if rPattern.match(oChildFileOrFolder.sName)
         ];
         if len(aoInputFilesAndFolders) == 0:
           oConsole.fOutput(
             COLOR_ERROR, CHAR_ERROR,
             COLOR_NORMAL, " Input file or folder pattern ",
-            COLOR_INFO, oInputFileOrFolder.sPath,
+            COLOR_INFO, oInputFilesAndFoldersPatternBaseFolder.sPath,
             COLOR_ERROR, " does not match anything!",
           );
           sys.exit(guExitCodeBadArgument);
@@ -106,19 +115,28 @@ try:
         aoInputFilesAndFolders = [oInputFileOrFolder];
       # Add the given or matched files and all descendant files of the given or matched folders to the list of files to add.
       for oInputFileOrFolder in aoInputFilesAndFolders:
-        if oInputFileOrFolder.fbIsFile(bParseZipFiles = True):
+        if oInputFileOrFolder.fbIsFile(bParseZipFiles = True, bThrowErrors = False):
           bAddedAllFilesInAFolder = False;
           oBaseFolder = oInputFileOrFolder.oParent;
           aoInputFiles = [oInputFileOrFolder];
-        elif oInputFileOrFolder.fbIsFolder(bParseZipFiles = True):
+        elif oInputFileOrFolder.fbIsFolder(bParseZipFiles = True, bThrowErrors = False):
           bAddedAllFilesInAFolder = True;
           oBaseFolder = oInputFileOrFolder;
+          a0oDescendants = oBaseFolder.fa0oGetDescendants(bParseZipFiles = True, bThrowErrors = False);
+          if a0oDescendants is None:
+            oConsole.fOutput(
+              COLOR_ERROR, CHAR_ERROR,
+              COLOR_NORMAL, " Input folder ",
+              COLOR_INFO, oInputFileOrFolder.sPath,
+              COLOR_ERROR, " cannot be read!",
+            );
+            sys.exit(guExitCodeCannotReadFromFileSystem);
           aoInputFiles = [
             oInputFileOrFolder
-            for oInputFileOrFolder in oBaseFolder.faoGetDescendants()
+            for oInputFileOrFolder in a0oDescendants
             if (
               oInputFileOrFolder.sPath != oOutputZipFile.sPath
-              and oInputFileOrFolder.fbIsFile(bParseZipFiles = True)
+              and oInputFileOrFolder.fbIsFile(bParseZipFiles = True, bThrowErrors = False)
             )
           ];
         else:
@@ -164,17 +182,13 @@ try:
               "+ File ", COLOR_INFO, oBaseFolder.fsGetRelativePathTo(oInputFile), COLOR_NORMAL, " (", COLOR_INFO, fsBytesToHumanReadableString(oInputFile.fuGetSize()), COLOR_NORMAL, ")."
             );
           doInputFile_by_sRelativePathInOutputZip[sRelativePath] = oInputFile;
-    if oOutputZipFile.fbExists(bParseZipFiles = True):
-      try:
-        oOutputZipFile.fbDelete(bParseZipFiles = True, bThrowErrors = True);
-      except Exception as oException:
+    if oOutputZipFile.fbExists(bParseZipFiles = True, bThrowErrors = False):
+      if not oOutputZipFile.fbDelete(bParseZipFiles = True, bThrowErrors = False):
         oConsole.fOutput(
           COLOR_ERROR, CHAR_ERROR,
           COLOR_NORMAL, " Existing output zip file ",
           COLOR_INFO, oOutputZipFile.sPath,
-          COLOR_ERROR, " cannot be deleted: ",
-          COLOR_INFO, repr(oException),
-          COLOR_ERROR, "!",
+          COLOR_ERROR, " cannot be deleted!",
         );
         sys.exit(guExitCodeCannotWriteToFileSystem);
       if bVerbose:
@@ -184,16 +198,12 @@ try:
           COLOR_INFO, oOutputZipFile.sPath,
           COLOR_NORMAL, ".",
         );
-    try:
-      oOutputZipFile.fbCreateAsZipFile(bParseZipFiles = True, bKeepOpen = True, bThrowErrors = True);
-    except Exception as oException:
+    if not oOutputZipFile.fbCreateAsZipFile(bParseZipFiles = True, bKeepOpen = True, bThrowErrors = False):
       oConsole.fOutput(
         COLOR_ERROR, CHAR_ERROR,
         COLOR_NORMAL, " Output zip file ",
         COLOR_INFO, oOutputZipFile.sPath,
-        COLOR_ERROR, " cannot be created: ",
-        COLOR_INFO, repr(oException),
-        COLOR_ERROR, "!",
+        COLOR_ERROR, " cannot be created!",
       );
       sys.exit(guExitCodeCannotWriteToFileSystem);
     uTotalFiles = len(doInputFile_by_sRelativePathInOutputZip);
@@ -209,15 +219,21 @@ try:
     uProcessedFiles = 0;
     for sRelativePath in fasSortedAlphabetically(doInputFile_by_sRelativePathInOutputZip.keys()):
       oInputFile = doInputFile_by_sRelativePathInOutputZip[sRelativePath];
-      oOutputFile = oOutputZipFile.foGetDescendant(sRelativePath, bParseZipFiles = True);
+      oOutputFile = oOutputZipFile.fo0GetDescendant(sRelativePath, bParseZipFiles = True);
       nProgress = 1.0 * uProcessedFiles / uTotalFiles;
       oConsole.fProgressBar(nProgress, "* %s: Reading..." % sRelativePath);
-      sbData = oInputFile.fsbRead();
-      if oOutputFile.fbIsFile(bParseZipFiles = True):
+      sb0Data = oInputFile.fsb0Read(bThrowErrors = False);
+      if sb0Data is None:
+        oConsole.fOutput(
+          COLOR_ERROR, CHAR_ERROR,
+          COLOR_NORMAL, " Cannot read input file ",
+          COLOR_INFO, oInputFile.sPath,
+          COLOR_ERROR, "!",
+        );
+        sys.exit(guExitCodeCannotReadFRomFileSystem);
+      elif oOutputFile.fbIsFile(bParseZipFiles = True, bThrowErrors = False):
         oConsole.fProgressBar(nProgress, "* %s: Overwriting (%s)..." % (sRelativePath, fsBytesToHumanReadableString(len(sbData))));
-        try:
-          oOutputFile.fbWrite(sbData, bThrowErrors = True);
-        except Exception as oException:
+        if not oOutputFile.fbWrite(sbData, bThrowErrors = False):
           oConsole.fOutput(
             COLOR_ERROR, CHAR_ERROR,
             COLOR_NORMAL, " Cannot write ",
@@ -226,16 +242,12 @@ try:
             COLOR_INFO, sRelativePath,
             COLOR_ERROR, " in zip file ",
             COLOR_INFO, oOutputZipFile.sPath,
-            COLOR_ERROR, ":",
-            COLOR_INFO, repr(oException),
             COLOR_ERROR, "!",
           );
           sys.exit(guExitCodeCannotWriteToFileSystem);
       else:
         oConsole.fProgressBar(nProgress, "* %s: Creating (%s)..." % (sRelativePath, fsBytesToHumanReadableString(len(sbData))));
-        try:
-          oOutputFile.fbCreateAsFile(sbData, bParseZipFiles = True, bThrowErrors = True);
-        except Exception as oException:
+        if not oOutputFile.fbCreateAsFile(sbData, bParseZipFiles = True, bThrowErrors = False):
           oConsole.fOutput(
             COLOR_ERROR, CHAR_ERROR,
             COLOR_NORMAL, " Cannot write ",
@@ -244,28 +256,30 @@ try:
             COLOR_INFO, sRelativePath,
             COLOR_ERROR, " in zip file ",
             COLOR_INFO, oOutputZipFile.sPath,
-            COLOR_ERROR, ":",
-            COLOR_INFO, repr(oException),
             COLOR_ERROR, "!",
           );
           sys.exit(guExitCodeCannotWriteToFileSystem);
       uProcessedBytes += len(sbData);
       uProcessedFiles += 1;
     
-    try:
-      oOutputZipFile.fbClose(bThrowErrors = True);
-    except Exception as oException:
+    if not oOutputZipFile.fbClose(bThrowErrors = False):
       oConsole.fOutput(
         COLOR_ERROR, CHAR_ERROR,
         COLOR_NORMAL, " Output zip file ",
         COLOR_INFO, oOutputZipFile.sPath,
-        COLOR_ERROR, " cannot be closed:",
-        COLOR_INFO, str(oException),
-        COLOR_ERROR, "!",
+        COLOR_ERROR, " cannot be closed!",
       );
       sys.exit(guExitCodeCannotWriteToFileSystem);
     
-    uFileSizeInBytes = oOutputZipFile.fuGetSize();
+    u0FileSizeInBytes = oOutputZipFile.fu0GetSize(bThrowErrors = False);
+    if u0FileSizeInBytes is None:
+      oConsole.fOutput(
+        COLOR_ERROR, CHAR_ERROR,
+        COLOR_NORMAL, " Cannot get file size of output zip file ",
+        COLOR_INFO, oOutputZipFile.sPath,
+        COLOR_NORMAL, "!",
+      );
+      sys.exit(guExitCodeCannotReadFromFileSystem);
     oConsole.fOutput(
       COLOR_OK, CHAR_OK,
       COLOR_NORMAL, " Added ",
