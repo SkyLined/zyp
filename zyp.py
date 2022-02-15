@@ -73,17 +73,25 @@ try:
       # Handle wildcards:
       bContainsWildcard = "*" in sInputFilesAndFoldersPathOrPattern or "?" in sInputFilesAndFoldersPathOrPattern;
       if bContainsWildcard:
-        # Create a FileSystemItem for the pattern. This which does not represent an actual file or folder.
+        # Create a FileSystemItem for the pattern. This does not represent an actual file or folder.
         # It will only be used to split the base folder and the pattern.
         oInputFilesAndFoldersPatternFileSystemItem = cFileSystemItem(sInputFilesAndFoldersPathOrPattern);
-        oInputFilesAndFoldersPatternBaseFolder = oInputFilesAndFoldersPatternFileSystemItem.oParent;
+        o0InputFilesAndFoldersPatternBaseFolder = oInputFilesAndFoldersPatternFileSystemItem.o0Parent;
+        if o0InputFilesAndFoldersPatternBaseFolder is None:
+          oConsole.fOutput(
+            COLOR_ERROR, CHAR_ERROR,
+            COLOR_NORMAL, " Input file or folder pattern ",
+            COLOR_INFO, sInputFilesAndFoldersPathOrPattern,
+            COLOR_NORMAL, " is invalid!",
+          );
+          sys.exit(guExitCodeCannotReadFromFileSystem);
         sPattern = oInputFilesAndFoldersPatternFileSystemItem.sName;
         rPattern = re.compile("^%s$" % re.escape(sPattern).replace("\\*", ".*").replace("\\?", "."));
-        a0oChildren = oInputFilesAndFoldersPatternBaseFolder.fa0oGetChildren(bParseZipFiles = True);
+        a0oChildren = o0InputFilesAndFoldersPatternBaseFolder.fa0oGetChildren(bParseZipFiles = True);
         if a0oChildren is None:
           oConsole.fOutput(
             COLOR_ERROR, CHAR_ERROR,
-            COLOR_NORMAL, " Input file or folder ",
+            COLOR_NORMAL, " Input file or folder pattern base folder ",
             COLOR_INFO, oInputFilesAndFoldersPatternBaseFolder.sPath,
             COLOR_NORMAL, " cannot be read!",
           );
@@ -97,7 +105,7 @@ try:
           oConsole.fOutput(
             COLOR_ERROR, CHAR_ERROR,
             COLOR_NORMAL, " Input file or folder pattern ",
-            COLOR_INFO, oInputFilesAndFoldersPatternBaseFolder.sPath,
+            COLOR_INFO, sInputFilesAndFoldersPathOrPattern,
             COLOR_NORMAL, " does not match anything!",
           );
           sys.exit(guExitCodeBadArgument);
@@ -117,7 +125,9 @@ try:
       for oInputFileOrFolder in aoInputFilesAndFolders:
         if oInputFileOrFolder.fbIsFile(bParseZipFiles = True):
           bAddedAllFilesInAFolder = False;
-          oBaseFolder = oInputFileOrFolder.oParent;
+          oBaseFolder = oInputFileOrFolder.o0Parent; # Could return None, so assert to make sure it doesn't.
+          assert oBaseFolder, \
+              "Input file %s does not have a parent folder!?" % oInputFileOrFolder;
           aoInputFiles = [oInputFileOrFolder];
         elif oInputFileOrFolder.fbIsFolder(bParseZipFiles = True):
           bAddedAllFilesInAFolder = True;
